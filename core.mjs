@@ -57,6 +57,10 @@ export function normalizeExtract(text, body) {
 
 export function redactError(e) {
   const s = String(e?.message ?? 'Unknown upstream error');
+  // An HTML challenge page means the request was stopped at the network edge, before the API.
+  if (/<!DOCTYPE html|Just a moment/i.test(s)) {
+    return 'HTTP 403：请求被网站安全验证（Cloudflare）拦在API之前，通常是当前网络或代理IP被风控。请换网络/代理节点后再试一次';
+  }
   return s.replace(/clk_[A-Za-z0-9_-]+/g, '[REDACTED]').slice(0, 220);
 }
 

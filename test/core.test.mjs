@@ -21,3 +21,7 @@ test('null value stays missing, confidence outside 0..1 becomes null', () => {
 test('API keys are redacted from error messages', () => {
   assert.ok(!redactError(new Error('bad key clk_live_abcDEF123')).includes('abcDEF123'));
 });
+test('Cloudflare challenge HTML is turned into a readable network message', () => {
+  const m = redactError(new Error('Clocked API 403: <!DOCTYPE html><html><head><title>Just a moment...</title>'));
+  assert.ok(m.includes('Cloudflare')); assert.ok(!m.includes('<html'));
+});
