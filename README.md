@@ -4,6 +4,8 @@
 
 Paste a notice (a competition announcement, a scholarship call, a job post). **Clocked Extract** pulls out the facts you choose, and the app marks **where each value sits in the original text**. Then type what you *think* the notice says, and **Clocked Grounding** checks that claim against the text and shows the passage it rests on. Anything that doesn't match the source is flagged, never smoothed over.
 
+**Demo video (1:42, real API calls):** https://drive.google.com/file/d/1u0xVbAgwVfKjGgrmHzL2igsXkge_FkWh/view
+
 Built for the Clocked Build Challenge (Oct 21 – Nov 10, 2026). First prototype written 2026-10-27. Terminal / hacker-blog styled UI, no external fonts or scripts.
 
 ## What Clocked does in the app
