@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小羽 · 可信文档核验助手</title>
+<style>
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Microsoft YaHei", sans-serif;
+  color: #243047;
+  background: #f5f7fb;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+header {
+  background: white;
+  border-bottom: 1px solid #e8edf5;
+  padding: 18px 6%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand { font-size: 19px; font-weight: 750; }
+.brand span { color: #5379e7; }
+.status { color: #65738b; font-size: 12px; }
+main { max-width: 980px; margin: 48px auto; padding: 0 20px; }
+.eyebrow {
+  color: #5379e7; font-size: 12px; font-weight: 700;
+  letter-spacing: 1.5px;
+}
+h1 { font-size: clamp(28px, 5vw, 42px); margin: 12px 0; }
+.intro { color: #69778d; line-height: 1.8; }
+.panel {
+  margin-top: 28px; padding: 24px; background: white;
+  border: 1px solid #e6ebf3; border-radius: 18px;
+  box-shadow: 0 12px 36px #273a5b0a;
+}
+label { display: block; font-weight: 650; margin-bottom: 12px; }
+textarea {
+  width: 100%; min-height: 220px; resize: vertical;
+  padding: 16px; border: 1px solid #dce3ef;
+  border-radius: 12px; font: inherit; line-height: 1.8;
+  outline: none; background: #fcfdff;
+}
+textarea:focus {
+  border-color: #7291ef;
+  box-shadow: 0 0 0 3px #5379e71a;
+}
+.hint { color: #8994a6; font-size: 12px; margin-top: 9px; }
+button {
+  margin-top: 18px; width: 100%; border: 0;
+  border-radius: 11px; padding: 14px;
+  background: #5379e7; color: white;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+}
+button:disabled { opacity: .55; cursor: wait; }
+.result {
+  margin-top: 22px; padding: 18px; border-radius: 12px;
+  background: #f7f9fd; border: 1px solid #e8edf5;
+}
+.result-title { font-weight: 700; margin-bottom: 12px; }
+#output { white-space: pre-wrap; overflow-wrap: anywhere;
+  line-height: 1.8; font-size: 13px; }
+footer { text-align: center; color: #96a0b0;
+  font-size: 12px; padding: 20px; }
+@media (max-width: 600px) {
+  main { margin-top: 28px; }
+  .panel { padding: 16px; }
+  header { padding: 16px 20px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">小羽 <span>Evidence Desk</span></div>
+  <div class="status">可信文档核验工作台</div>
+</header>
+
+<main>
+  <div class="eyebrow">DOCUMENT INTELLIGENCE</div>
+  <h1>让每一条结论，都有原文依据。</h1>
+  <p class="intro">
+    提取文档中的截止日期、参赛资格和奖励信息，
+    并展示对应的原文位置，帮助你更快核对重要信息。
+  </p>
+
+  <section class="panel">
+    <form id="form">
+      <label for="source">第一步 · 粘贴需要核验的文本</label>
+      <textarea id="source" maxlength="20000"
+        placeholder="例如：本次比赛报名截止日期为2026年11月10日。参赛者必须年满18岁，允许个人参赛。"
+        required></textarea>
+      <div class="hint">建议先使用公开通知或虚构文本测试，不要粘贴身份证号、密码等敏感信息。</div>
+      <button id="submit" type="submit">提取关键信息</button>
+    </form>
+
+    <div class="result" aria-live="polite">
+      <div class="result-title">第二步 · 核验结果</div>
+      <div id="output">等待提交文本。提取结果将在这里显示。</div>
+    </div>
+  </section>
+</main>
+
+<footer>Xiaoyu Evidence Desk · 本地开发预览</footer>
+
+<script>
+const form = document.getElementById('form');
+const source = document.getElementById('source');
+const submit = document.getElementById('submit');
+const output = document.getElementById('output');
+
+let pendingKey = null;
+
+source.addEventListener('input', () => {
+  pendingKey = null;
+});
+
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  const text = source.value.trim();
+  if (!text) return;
+
+  if (!pendingKey) {
+    pendingKey = crypto.randomUUID();
+  }
+
+  submit.disabled = true;
+  source.disabled = true;
+  output.textContent = '正在提取信息，请稍候……';
+
+  try {
+    const response = await fetch('/api/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        idempotencyKey: pendingKey
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.ok) {
+      throw new Error(result.error || '请求失败，HTTP ' + response.status);
+    }
+
+    const fields = result.data?.fields || {};
+    const lines = Object.entries(fields).map(([name, item]) => {
+      const evidence =
+        Number.isInteger(item.start) && Number.isInteger(item.end)
+          ? text.slice(item.start, item.end)
+          : '';
+
+      return name +
+        '\n提取结果：' + (item.value ?? '未识别') +
+        '\n原文证据：' + (evidence || '暂无') +
+        '\n置信度：' +
+        (typeof item.confidence === 'number'
+          ? (item.confidence * 100).toFixed(2) + '%'
+          : '未提供');
+    });
+
+    output.textContent =
+      (lines.join('\n\n') || '没有提取到字段') +
+      '\n\n模型耗时：' + (result.modelMs ?? '未知') + ' ms';
+
+    pendingKey = null;
+  } catch (error) {
+    output.textContent =
+      '本次请求未成功：' + error.message +
+      '\n\n如果是网络超时，请先不要重复点击。再次尝试时将复用本次请求标识。';
+  } finally {
+    submit.disabled = false;
+    source.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
