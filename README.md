@@ -13,7 +13,7 @@ The app calls the Extract endpoint (`clocked-sdk@0.4.0`) and uses each field's `
 | **API exact position** (green) | `text.slice(start, end)` equals the value, so the source span is highlighted |
 | **Local text match** (amber) | offsets missing or wrong, but the value appears verbatim; we found it, not the API, and say so |
 | **Not found / unverified** (red) | the value does not appear in the source; never shown as a quote |
-| **Not returned** | Clocked returned no value; the app does not guess |
+| **Not in source** | Clocked returned null (with its confidence that the field is blank); the app does not guess |
 
 Click a field to see its span highlighted in context. Export the result as JSON or Markdown.
 

@@ -7,7 +7,7 @@ const EVIDENCE_TEXT = {
   'exact-offset': 'API 精确位置',
   'local-text-match': '本地字面匹配（非API位置）',
   'unverified': '原文中找不到，未核实',
-  'missing': '未返回',
+  'missing': '原文中没有',
 };
 
 source.addEventListener('input', () => { pendingKey = null; $('count').textContent = source.value.length; });
@@ -34,11 +34,12 @@ function render(data) {
     const box = document.createElement('div');
     box.className = 'field'; box.tabIndex = 0;
     const label = document.createElement('strong'); label.textContent = f.label;
-    const value = document.createElement('div'); value.className = 'value'; value.textContent = f.value ?? '未找到';
+    const value = document.createElement('div'); value.className = 'value'; value.textContent = f.value ?? '原文中没有这一项';
     const meta = document.createElement('small');
     const badge = document.createElement('span');
     badge.className = 'badge b-' + f.evidence.source; badge.textContent = EVIDENCE_TEXT[f.evidence.source];
-    meta.append(badge, document.createTextNode('置信度：' + (f.confidence === null ? '未提供' : (f.confidence * 100).toFixed(1) + '%')));
+    const conf = f.confidence === null ? '未提供' : (f.confidence * 100).toFixed(1) + '%';
+    meta.append(badge, document.createTextNode((f.value === null ? '确认为空的置信度：' : '置信度：') + conf));
     box.append(label, value, meta);
     const go = () => { document.querySelectorAll('.field.active').forEach((n) => n.classList.remove('active')); box.classList.add('active'); highlight(f); };
     box.addEventListener('click', go);
