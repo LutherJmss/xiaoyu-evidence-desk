@@ -41,7 +41,7 @@ Behind an HTTP proxy, set `HTTPS_PROXY` and start with `node --use-env-proxy ser
 
 ## Tests
 
-`npm test` runs 10 offline tests (Node's built-in runner): offset verification, downgrade of wrong offsets, unverified values, missing fields, key redaction, the synthetic sample label, fail-closed without a key, idempotency-key validation, and the adapter against a **hand-written fake response shaped like the SDK 0.4.0 types** (not a real API response). Real API behaviour is verified separately by running the app with a key.
+`npm test` runs 11 offline tests (Node's built-in runner): offset verification, downgrade of wrong offsets, unverified values, missing fields, key redaction, readable Cloudflare-block message, the synthetic sample label, fail-closed without a key, idempotency-key validation, and the adapter against a **hand-written fake response shaped like the SDK 0.4.0 types** (not a real API response). Real API behaviour is verified separately by running the app with a key.
 
 ## Limitations
 
