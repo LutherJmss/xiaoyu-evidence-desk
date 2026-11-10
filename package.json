@@ -1,15 +1,16 @@
 {
-  "name": "clocked-first-test",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "xiaoyu-evidence-desk",
+  "version": "1.1.0",
+  "description": "Paste a notice, extract key requirements with Clocked Extract, and check every value against its exact place in the source text.",
+  "type": "module",
+  "main": "server.mjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.mjs",
+    "smoke": "node index.mjs",
+    "test": "node --test"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
   "dependencies": {
     "clocked-sdk": "0.4.0",
     "dotenv": "18.0.9"
