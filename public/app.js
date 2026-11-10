@@ -78,9 +78,9 @@ function fieldSpec() {
 
 // ---------- helpers ----------
 function bar(p, width = 10) {
-  if (p === null || p === undefined) return '··········  n/a';
+  if (p === null || p === undefined) return '[' + '.'.repeat(width) + ']   n/a';
   const n = Math.round(p * width);
-  return '▮'.repeat(n) + '▯'.repeat(width - n) + ` ${(p * 100).toFixed(1).padStart(5)}%`;
+  return '[' + '#'.repeat(n) + '.'.repeat(width - n) + ']' + ` ${(p * 100).toFixed(1).padStart(5)}%`;
 }
 function context(text, start, end, pad = 60) {
   const frag = document.createDocumentFragment();
