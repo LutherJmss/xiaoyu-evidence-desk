@@ -35,6 +35,8 @@ cp .env.example .env   # Windows PowerShell: Copy-Item .env.example .env
 npm start           # http://127.0.0.1:3000
 ```
 
+Behind an HTTP proxy, set `HTTPS_PROXY` and start with `node --use-env-proxy server.mjs` (Node 24+); Node does not use the OS proxy settings by default.
+
 `npm run smoke` runs `index.mjs`, the original one-request Extract test from 2026-10-27.
 
 ## Tests
