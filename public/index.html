@@ -3,136 +3,85 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>小羽 · 可信文档核验助手</title>
-<style>
-:root {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-    "Microsoft YaHei", sans-serif;
-  color: #243047;
-  background: #f5f7fb;
-}
-* { box-sizing: border-box; }
-body { margin: 0; }
-header {
-  background: white;
-  border-bottom: 1px solid #e8edf5;
-  padding: 18px 6%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.brand { font-size: 19px; font-weight: 750; }
-.brand span { color: #5379e7; }
-.status { color: #65738b; font-size: 12px; }
-main { max-width: 980px; margin: 48px auto; padding: 0 20px; }
-.eyebrow {
-  color: #5379e7; font-size: 12px; font-weight: 700;
-  letter-spacing: 1.5px;
-}
-h1 { font-size: clamp(28px, 5vw, 42px); margin: 12px 0; }
-.intro { color: #69778d; line-height: 1.8; }
-.panel {
-  margin-top: 28px; padding: 24px; background: white;
-  border: 1px solid #e6ebf3; border-radius: 18px;
-  box-shadow: 0 12px 36px #273a5b0a;
-}
-label { display: block; font-weight: 650; margin-bottom: 12px; }
-textarea {
-  width: 100%; min-height: 220px; resize: vertical;
-  padding: 16px; border: 1px solid #dce3ef;
-  border-radius: 12px; font: inherit; line-height: 1.8;
-  outline: none; background: #fcfdff;
-}
-textarea:focus {
-  border-color: #7291ef;
-  box-shadow: 0 0 0 3px #5379e71a;
-}
-.hint { color: #8994a6; font-size: 12px; margin-top: 9px; }
-button {
-  margin-top: 18px; width: 100%; border: 0;
-  border-radius: 11px; padding: 14px;
-  background: #5379e7; color: white;
-  font-size: 15px; font-weight: 700; cursor: pointer;
-}
-button:disabled { opacity: .55; cursor: wait; }
-.result {
-  margin-top: 22px; padding: 18px; border-radius: 12px;
-  background: #f7f9fd; border: 1px solid #e8edf5;
-}
-.result-title { font-weight: 700; margin-bottom: 12px; }
-#output { white-space: pre-wrap; overflow-wrap: anywhere;
-  line-height: 1.8; font-size: 13px; }
-footer { text-align: center; color: #96a0b0;
-  font-size: 12px; padding: 20px; }
-@media (max-width: 600px) {
-  main { margin-top: 28px; }
-  .panel { padding: 16px; }
-  header { padding: 16px 20px; }
-}
-.row { display:flex; gap:10px; }
-.row button { flex:1; }
-button.secondary { background:#eef2fb; color:#3b5bc7; }
-.mode { display:inline-block; font-size:12px; font-weight:700; padding:3px 9px; border-radius:99px; margin-bottom:10px; }
-.mode.live { background:#e4f6ea; color:#1d7a3e; }
-.mode.synthetic { background:#fff1db; color:#a05a00; }
-.msg { font-size:13px; color:#65738b; margin-bottom:12px; white-space:pre-wrap; }
-.msg.err { color:#b42318; }
-.field { background:white; border:1px solid #e3e9f3; border-radius:10px; padding:12px 14px; margin-bottom:10px; cursor:pointer; }
-.field:focus, .field.active { outline:2px solid #7291ef; }
-.field strong { display:block; font-size:13px; color:#65738b; }
-.field .value { font-size:15px; margin:4px 0; }
-.badge { font-size:11px; padding:2px 7px; border-radius:6px; margin-right:6px; }
-.b-exact-offset { background:#e4f6ea; color:#1d7a3e; }
-.b-local-text-match { background:#fff1db; color:#a05a00; }
-.b-unverified, .b-missing { background:#fde8e8; color:#b42318; }
-#evidence { white-space:pre-wrap; line-height:1.9; font-size:13px; background:white; border:1px dashed #d5ddeb; border-radius:10px; padding:12px; margin-top:12px; }
-mark { background:#ffe58a; padding:1px 2px; border-radius:3px; }
-.exports { margin-top:12px; }
-.exports button { margin-top:0; }
-</style>
+<title>xiaoyu // evidence desk</title>
+<link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-<header>
-  <div class="brand">小羽 <span>Evidence Desk</span></div>
-  <div class="status" id="health">可信文档核验工作台</div>
+<div class="wrap">
+
+<header class="top">
+  <pre class="prompt" aria-label="xiaoyu evidence desk"><span class="dim">┌─[</span><span class="g">xiaoyu</span><span class="dim">@</span><span class="c">evidence-desk</span><span class="dim">]─[</span><span class="a">~/notices</span><span class="dim">]</span>
+<span class="dim">└──╼</span> <span class="g">$</span> verify --every-claim --show-source<span class="cursor">█</span></pre>
+  <div class="status" id="health">○ checking backend…</div>
 </header>
 
-<main>
-  <div class="eyebrow">DOCUMENT INTELLIGENCE</div>
-  <h1>让每一条结论，都有原文依据。</h1>
-  <p class="intro">
-    用 Clocked Extract 提取截止时间、参赛形式、年龄要求、奖励和提交材料，
-    并逐条核对原文位置：API 给出的精确位置、本地字面匹配、无法核实，分别清楚标出。
-  </p>
+<article class="post">
+  <div class="meta">post_001 · 2026-11-10 · <span class="tag">#clocked</span> <span class="tag">#extract</span> <span class="tag">#grounding</span></div>
+  <h1><span class="hash">#</span> 让每一条结论，都有原文依据。</h1>
+  <p>长通知里最容易漏的往往是一句话：截止时间的时区、年龄限制、一份必交材料。摘要读起来再顺，也替代不了原文。
+  这个工具把 <code>Clocked Extract</code> 返回的字符位置直接标回原文，再用 <code>Clocked Grounding</code> 核查你的理解对不对。
+  对不上原文的东西，一律标红，不替你圆。</p>
+</article>
 
-  <section class="panel">
-    <form id="form">
-      <label for="source">第一步 · 粘贴需要核验的文本</label>
-      <textarea id="source" maxlength="20000"
-        placeholder="例如：本次比赛报名截止日期为2026年11月10日。参赛者必须年满18岁，允许个人参赛。"
-        required></textarea>
-      <div class="hint"><span id="count">0</span> / 20000 字。建议使用公开通知或虚构文本，不要粘贴身份证号、密码等敏感信息。</div>
-      <div class="row">
-        <button id="submit" type="submit">用 Clocked API 提取（消耗 Credits）</button>
-        <button id="demo" type="button" class="secondary">查看合成示例（不调用API）</button>
-      </div>
-    </form>
+<section class="block">
+  <h2><span class="num">01</span> // source.txt</h2>
+  <textarea id="source" maxlength="20000" spellcheck="false"
+    placeholder="> 粘贴一份公开通知（比赛、奖学金、招聘……）&#10;> 不要粘贴身份证号、密码等敏感信息"></textarea>
+  <div class="hint"><span id="count">0</span>/20000 chars</div>
+</section>
 
-    <div class="result" aria-live="polite">
-      <div class="result-title">第二步 · 核验结果</div>
-      <div id="mode"></div>
-      <div id="msg" class="msg">等待提交文本。提取结果将在这里显示。</div>
-      <div id="fields"></div>
-      <div id="evidence" hidden></div>
-      <div class="row exports">
-        <button id="json" type="button" class="secondary" disabled>导出 JSON</button>
-        <button id="md" type="button" class="secondary" disabled>导出 Markdown</button>
-      </div>
-    </div>
-  </section>
-</main>
+<section class="block">
+  <h2><span class="num">02</span> // fields.conf <span class="dim small">要提取什么，自己定</span></h2>
+  <div id="fieldEditor"></div>
+  <div class="btns">
+    <button type="button" id="addField" class="ghost">+ add_field</button>
+    <button type="button" id="resetFields" class="ghost">↺ reset_defaults</button>
+  </div>
+  <div class="btns">
+    <button type="button" id="run" class="primary">$ clocked extract <span class="dim">--live</span></button>
+    <button type="button" id="demo" class="ghost">$ replay --synthetic <span class="dim">(no API call)</span></button>
+  </div>
+</section>
 
-<footer>Xiaoyu Evidence Desk · 本地运行 · 结果须人工复核</footer>
+<section class="block" id="resultBlock" hidden>
+  <h2><span class="num">03</span> // annotated.view</h2>
+  <div id="modeLine"></div>
+  <div id="annotated" class="annotated"></div>
+  <div class="legend">
+    <span class="badge b-exact-offset">EXACT</span> API 给出的字符位置与原文完全一致
+    <span class="badge b-local-text-match">LOCAL</span> 位置不对，但原文有这段字（是我们找到的，不是API）
+    <span class="badge b-unverified">UNVERIFIED</span> 原文中找不到
+    <span class="badge b-missing">NULL</span> 原文中没有这一项
+  </div>
+  <h2><span class="num">04</span> // fields.out</h2>
+  <div id="fields" class="fields"></div>
+</section>
+
+<section class="block">
+  <h2><span class="num">05</span> // claim_check <span class="dim small">把你的理解丢进来，对照原文判真假</span></h2>
+  <div class="claimrow">
+    <span class="g">&gt;</span>
+    <input id="claim" maxlength="500" spellcheck="false" placeholder="例如：大二学生可以个人参赛，11月10日之前提交就行">
+    <button type="button" id="verify" class="primary">$ clocked grounding</button>
+  </div>
+  <div id="claims"></div>
+</section>
+
+<section class="block">
+  <h2><span class="num">06</span> // export</h2>
+  <div class="btns">
+    <button type="button" id="json" class="ghost" disabled>⇩ evidence.json</button>
+    <button type="button" id="md" class="ghost" disabled>⇩ evidence.md</button>
+  </div>
+</section>
+
+<section class="block">
+  <h2><span class="num">07</span> // trace.log</h2>
+  <pre id="trace" class="trace" aria-live="polite"></pre>
+</section>
+
+<footer>xiaoyu evidence desk · runs on 127.0.0.1 · API key never leaves the server · results are a review aid, not advice</footer>
+</div>
 <script src="/app.js"></script>
 </body>
 </html>

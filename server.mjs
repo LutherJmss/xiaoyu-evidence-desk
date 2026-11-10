@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { EXTRACT_FIELDS, MAX_CHARS, UUID_RE, normalizeExtract, redactError } from './core.mjs';
+import { MAX_CHARS, UUID_RE, normalizeExtract, normalizeGrounding, parseCustomFields, redactError } from './core.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const HOST = '127.0.0.1';
@@ -27,6 +27,7 @@ const STATIC = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ['/index.html', ['index.html', 'text/html; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
+  ['/styles.css', ['styles.css', 'text/css; charset=utf-8']],
 ]);
 
 function send(res, status, data, type = 'application/json; charset=utf-8') {
@@ -73,15 +74,25 @@ async function handler(req, res) {
       send(res, 200, { ok: true, liveConfigured: Boolean(process.env.CLOCKED_API_KEY?.trim()), liveUsed, liveLimit: LIVE_LIMIT }); return;
     }
     if (req.method === 'POST' && url.pathname === '/api/demo') {
-      send(res, 200, { ok: true, mode: 'synthetic-demo', model: null, text: SAMPLE_TEXT,
+      send(res, 200, { ok: true, mode: 'synthetic-demo', endpoint: 'extract', model: null, text: SAMPLE_TEXT,
         fields: normalizeExtract(SAMPLE_TEXT, syntheticBody()), note: '合成示例回放：没有调用 Clocked API，也没有消耗 Credits。' }); return;
     }
-    if (req.method === 'POST' && url.pathname === '/api/extract') {
+    if (req.method === 'POST' && (url.pathname === '/api/extract' || url.pathname === '/api/verify')) {
+      const isVerify = url.pathname === '/api/verify';
       const body = await readJson(req);
       const text = typeof body?.text === 'string' ? body.text.trim() : '';
       if (!text || text.length > MAX_CHARS) { send(res, 400, { ok: false, error: `请输入文本，长度不能超过${MAX_CHARS}个字符。` }); return; }
       if (typeof body.idempotencyKey !== 'string' || !UUID_RE.test(body.idempotencyKey)) {
         send(res, 400, { ok: false, error: '请求标识无效，请刷新页面后重试。' }); return;
+      }
+      let spec, claim;
+      if (isVerify) {
+        claim = typeof body.claim === 'string' ? body.claim.trim() : '';
+        if (!claim || claim.length > 500) { send(res, 400, { ok: false, error: '请输入要核查的说法（1～500字）。' }); return; }
+      } else {
+        const parsed = parseCustomFields(body.fields);
+        if (parsed.error) { send(res, 400, { ok: false, error: parsed.error }); return; }
+        spec = parsed.fields;
       }
       if (!process.env.CLOCKED_API_KEY?.trim()) {
         send(res, 412, { ok: false, error: '没有读取到 CLOCKED_API_KEY（.env）。真实模式不会自动改用示例数据。' }); return;
@@ -91,11 +102,17 @@ async function handler(req, res) {
       }
       liveUsed++;
       const clocked = await makeClient();
-      const result = await clocked.extract({ text, fields: { ...EXTRACT_FIELDS } },
-        { idempotencyKey: body.idempotencyKey, timeout: 120000, maxAttempts: 1 });
+      const opts = { idempotencyKey: body.idempotencyKey, timeout: 120000, maxAttempts: 1 };
+      const t0 = Date.now();
+      const result = isVerify
+        ? await clocked.grounding({ documents: [{ id: 'notice', text }], answer: claim, evidence: 'all' }, opts)
+        : await clocked.extract({ text, fields: spec }, opts);
       const data = result?.data ?? {};
-      send(res, 200, { ok: true, mode: 'clocked-live', model: typeof data.model === 'string' ? data.model : null, text,
-        fields: normalizeExtract(text, data), status: result?.status ?? null, modelMs: result?.modelMs ?? null }); return;
+      const common = { ok: true, mode: 'clocked-live', endpoint: isVerify ? 'grounding' : 'extract',
+        model: typeof data.model === 'string' ? data.model : null, text,
+        status: result?.status ?? null, modelMs: result?.modelMs ?? null, roundTripMs: Date.now() - t0, liveUsed, liveLimit: LIVE_LIMIT };
+      send(res, 200, isVerify ? { ...common, claim, grounding: normalizeGrounding(text, data) }
+        : { ...common, spec, fields: normalizeExtract(text, data, spec) }); return;
     }
     send(res, 404, { ok: false, error: '接口不存在。' });
   } catch (e) {

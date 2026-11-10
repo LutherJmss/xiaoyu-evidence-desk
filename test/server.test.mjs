@@ -58,3 +58,26 @@ test('upstream errors return 502 with the key redacted', async () => {
     });
   } finally { if (old) process.env.CLOCKED_API_KEY = old; else delete process.env.CLOCKED_API_KEY; }
 });
+
+// Fake grounding response shaped like clocked-sdk@0.4.0 GroundingResponse. NOT a real API response.
+test('verify endpoint calls grounding with the notice as the only document', async () => {
+  let seen;
+  _setClientFactoryForTests(async () => ({ grounding: async (req, opts) => { seen = { req, opts };
+    return { status: 200, data: { model: 'fake-model-for-test', verdict: 'grounded', grounded: 0.8, claims: [{ claim: 'c', supported: 0.8, contradicted: 0.1, not_stated: 0.1 }] } }; } }));
+  const old = process.env.CLOCKED_API_KEY; process.env.CLOCKED_API_KEY = 'placeholder-not-a-key';
+  try {
+    await withServer(async (b) => {
+      const r = await post(b + '/api/verify', { text: '允许个人参赛。', claim: '可以个人参赛', idempotencyKey: UUID }); const d = await r.json();
+      assert.equal(r.status, 200); assert.equal(d.endpoint, 'grounding');
+      assert.equal(seen.req.documents[0].text, '允许个人参赛。'); assert.equal(seen.req.answer, '可以个人参赛'); assert.equal(seen.opts.maxAttempts, 1);
+      assert.equal(d.grounding.claims[0].evidence.source, 'missing');
+    });
+  } finally { if (old) process.env.CLOCKED_API_KEY = old; else delete process.env.CLOCKED_API_KEY; }
+});
+
+test('custom fields are validated before any API call', async () => {
+  _setClientFactoryForTests(async () => { throw new Error('must not be called'); });
+  const old = process.env.CLOCKED_API_KEY; process.env.CLOCKED_API_KEY = 'placeholder-not-a-key';
+  try { await withServer(async (b) => assert.equal((await post(b + '/api/extract', { text: 'x', fields: { 'Bad!': 'y' }, idempotencyKey: UUID })).status, 400)); }
+  finally { if (old) process.env.CLOCKED_API_KEY = old; else delete process.env.CLOCKED_API_KEY; }
+});

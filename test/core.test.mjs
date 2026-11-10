@@ -25,3 +25,21 @@ test('Cloudflare challenge HTML is turned into a readable network message', () =
   const m = redactError(new Error('Clocked API 403: <!DOCTYPE html><html><head><title>Just a moment...</title>'));
   assert.ok(m.includes('Cloudflare')); assert.ok(!m.includes('<html'));
 });
+import { parseCustomFields, normalizeGrounding } from '../core.mjs';
+test('custom fields: defaults when absent, bad names rejected, limit enforced', () => {
+  assert.ok(parseCustomFields(undefined).fields.deadline);
+  assert.deepEqual(parseCustomFields({ fee: ' 报名费用 ' }).fields, { fee: '报名费用' });
+  assert.ok(parseCustomFields({ 'Bad Name': 'x' }).error);
+  assert.ok(parseCustomFields({ fee: '' }).error);
+  assert.ok(parseCustomFields(Object.fromEntries(Array.from({ length: 13 }, (_, i) => [`f${i}`, 'x']))).error);
+});
+test('grounding: passages are re-checked against the source', () => {
+  const t = '参赛者必须年满18岁。允许个人参赛。'; const q = '允许个人参赛'; const s = t.indexOf(q);
+  const g = normalizeGrounding(t, { verdict: 'grounded', grounded: 0.9, claims: [
+    { claim: '可以个人参赛', verdict: 'supported', supported: 0.95, contradicted: 0.02, not_stated: 0.03, evidence: { quote: q, start: s, end: s + q.length } },
+    { claim: '16岁可以参赛', verdict: 'contradicted', supported: 0.1, contradicted: 2, not_stated: 0.1, evidence: { quote: '十六岁', start: 0, end: 3 } },
+  ] });
+  assert.equal(g.claims[0].evidence.source, 'exact-offset');
+  assert.equal(g.claims[1].evidence.source, 'unverified');
+  assert.equal(g.claims[1].contradicted, 1);
+});

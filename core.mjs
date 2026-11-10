@@ -42,16 +42,16 @@ export function verifyEvidence(text, field) {
 }
 
 /** Map a clocked-sdk@0.4.0 ExtractResponse body ({model, fields}) to UI rows. */
-export function normalizeExtract(text, body) {
+export function normalizeExtract(text, body, spec = EXTRACT_FIELDS) {
   const fields = body && typeof body.fields === 'object' && body.fields ? body.fields : {};
-  return Object.keys(EXTRACT_FIELDS).map((id) => {
+  return Object.keys(spec).map((id) => {
     const raw = fields[id];
     const f = typeof raw === 'string' ? { value: raw } : raw && typeof raw === 'object' ? raw : {};
     const value = typeof f.value === 'string' && f.value.trim() ? f.value.trim()
       : typeof f.value === 'number' ? String(f.value) : null;
     const c = f.confidence;
     const confidence = typeof c === 'number' && Number.isFinite(c) && c >= 0 && c <= 1 ? c : null;
-    return { id, label: FIELD_LABELS[id], value, confidence, evidence: verifyEvidence(text, { ...f, value }) };
+    return { id, label: FIELD_LABELS[id] ?? (spec === EXTRACT_FIELDS ? id : `${id} · ${spec[id]}`), value, confidence, evidence: verifyEvidence(text, { ...f, value }) };
   });
 }
 
@@ -65,3 +65,44 @@ export function redactError(e) {
 }
 
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export const FIELD_ID_RE = /^[a-z][a-z0-9_]{0,31}$/;
+export const MAX_FIELDS = 12;
+
+/** Validate user-defined fields: {id: description}. Returns {fields} or {error}. */
+export function parseCustomFields(input) {
+  if (input === undefined || input === null) return { fields: { ...EXTRACT_FIELDS } };
+  if (typeof input !== 'object' || Array.isArray(input)) return { error: '字段格式无效。' };
+  const entries = Object.entries(input);
+  if (entries.length < 1 || entries.length > MAX_FIELDS) return { error: `字段数量须为 1～${MAX_FIELDS} 个。` };
+  const out = {};
+  for (const [id, desc] of entries) {
+    if (!FIELD_ID_RE.test(id)) return { error: `字段名「${String(id).slice(0, 40)}」无效：只能用小写字母、数字、下划线，且以字母开头。` };
+    if (typeof desc !== 'string' || !desc.trim() || desc.length > 200) return { error: `字段「${id}」的说明须为 1～200 字。` };
+    out[id] = desc.trim();
+  }
+  return { fields: out };
+}
+
+const prob = (x) => (typeof x === 'number' && Number.isFinite(x) ? Math.min(1, Math.max(0, x)) : null);
+
+/** Map a clocked-sdk@0.4.0 GroundingResponse to UI data; every quoted passage is re-checked against the source. */
+export function normalizeGrounding(text, body) {
+  const claims = Array.isArray(body?.claims) ? body.claims : [];
+  return {
+    verdict: typeof body?.verdict === 'string' ? body.verdict : null,
+    grounded: prob(body?.grounded),
+    claims: claims.map((c) => {
+      const ev = c?.evidence && typeof c.evidence === 'object' ? c.evidence : null;
+      const evidence = ev && typeof ev.quote === 'string' && ev.quote.trim()
+        ? verifyEvidence(text, { value: ev.quote, start: ev.start, end: ev.end })
+        : { start: null, end: null, quote: null, source: 'missing' };
+      return {
+        claim: typeof c?.claim === 'string' ? c.claim : '',
+        verdict: typeof c?.verdict === 'string' ? c.verdict : null,
+        supported: prob(c?.supported), contradicted: prob(c?.contradicted), not_stated: prob(c?.not_stated),
+        evidence,
+      };
+    }),
+  };
+}
